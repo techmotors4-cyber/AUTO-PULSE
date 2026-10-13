@@ -1,17 +1,8 @@
-# 1. Initialize git (if not already initialized)
-git init
+# 1. Install dependencies
+npm install
 
-# 2. Stage all project files
-git add .
+# 2. Start development server
+npm run dev
 
-# 3. Create initial commit
-git commit -m "feat: Initial commit for Pollachi AutoPulse dispatch app"
-
-# 4. Set default branch to main
-git branch -M main
-
-# 5. Connect to your GitHub repository (replace with your actual repository URL)
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/pollachi-auto-pulse.git
-
-# 6. Push code to GitHub
-git push -u origin main
+# 3. Build for production
+npm run build
