@@ -35,25 +35,36 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android SDK with Platform 34
+      - name: Setup Android SDK with Platform 34 & Build Tools
         uses: android-actions/setup-android@v4
         with:
           items: platforms;android-34,build-tools;34.0.0
           license-accepted: true
 
-      - name: Scaffold Dual-Mode Project and Compile APK
+      - name: Scaffold Complete Project, Sign with V1/V2/V3 and Build APK
         run: |
-          # 1. Create clean Android directory structure
-          mkdir -p workspace/app/src/main/java/com/example/autopulse
+          # 1. Create clean Android directory structure with proper package id
+          mkdir -p workspace/app/src/main/java/com/pollachi/autopulse
           mkdir -p workspace/app/src/main/res/values
           mkdir -p workspace/app/src/main/assets
 
           # 2. Bundle built web application into Android native assets
           cp -r dist/* workspace/app/src/main/assets/
 
+          # 3. Generate a dedicated 2048-bit RSA signing keystore for Pollachi AutoPulse
+          keytool -genkeypair -v \
+            -keystore pollachi.keystore \
+            -alias pollachi \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass pollachi123 \
+            -keypass pollachi123 \
+            -dname "CN=Pollachi AutoPulse, OU=Dispatch, O=AutoPulse, L=Pollachi, ST=TamilNadu, C=IN"
+
           cd workspace
 
-          # 3. Root settings.gradle
+          # 4. Root settings.gradle
           cat << 'EOF' > settings.gradle
           pluginManagement {
               repositories {
@@ -69,11 +80,11 @@ jobs:
                   mavenCentral()
               }
           }
-          rootProject.name = "AUTO-PULSE"
+          rootProject.name = "PollachiAutoPulse"
           include ':app'
           EOF
 
-          # 4. Root build.gradle
+          # 5. Root build.gradle
           cat << 'EOF' > build.gradle
           plugins {
               id 'com.android.application' version '8.2.2' apply false
@@ -81,7 +92,7 @@ jobs:
           }
           EOF
 
-          # 5. App-level build.gradle with AndroidX WebKit
+          # 6. App-level build.gradle with dedicated signing configuration
           cat << 'EOF' > app/build.gradle
           plugins {
               id 'com.android.application'
@@ -89,24 +100,40 @@ jobs:
           }
 
           android {
-              namespace 'com.example.autopulse'
+              namespace 'com.pollachi.autopulse'
               compileSdk 34
 
               defaultConfig {
-                  applicationId "com.example.autopulse"
+                  applicationId "com.pollachi.autopulse"
                   minSdk 24
                   targetSdk 34
-                  versionCode 1
-                  versionName "1.0"
+                  versionCode 2
+                  versionName "1.0.1"
                   testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+              }
+
+              signingConfigs {
+                  release {
+                      storeFile file("../../pollachi.keystore")
+                      storePassword "pollachi123"
+                      keyAlias "pollachi"
+                      keyPassword "pollachi123"
+                      v1SigningEnabled true
+                      v2SigningEnabled true
+                  }
               }
 
               buildTypes {
                   release {
+                      signingConfig signingConfigs.release
                       minifyEnabled false
                       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
                   }
+                  debug {
+                      signingConfig signingConfigs.release
+                  }
               }
+
               compileOptions {
                   sourceCompatibility JavaVersion.VERSION_17
                   targetCompatibility JavaVersion.VERSION_17
@@ -124,7 +151,7 @@ jobs:
           }
           EOF
 
-          # 6. AndroidManifest.xml with hardware acceleration & network permissions
+          # 7. AndroidManifest.xml
           cat << 'EOF' > app/src/main/AndroidManifest.xml
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
@@ -150,16 +177,16 @@ jobs:
           </manifest>
           EOF
 
-          # 7. strings.xml
+          # 8. strings.xml
           cat << 'EOF' > app/src/main/res/values/strings.xml
           <resources>
               <string name="app_name">Pollachi AutoPulse</string>
           </resources>
           EOF
 
-          # 8. MainActivity.kt (Dual-Mode Container: Virtual HTTPS Origin + Live Fallback)
-          cat << 'EOF' > app/src/main/java/com/example/autopulse/MainActivity.kt
-          package com.example.autopulse
+          # 9. MainActivity.kt (Dual Mode with WebViewAssetLoader and live fallback)
+          cat << 'EOF' > app/src/main/java/com/pollachi/autopulse/MainActivity.kt
+          package com.pollachi.autopulse
 
           import android.os.Bundle
           import android.content.Intent
@@ -181,7 +208,6 @@ jobs:
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
 
-                  // Setup official WebViewAssetLoader for secure virtual HTTPS origin
                   val assetLoader = WebViewAssetLoader.Builder()
                       .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
                       .build()
@@ -189,7 +215,6 @@ jobs:
                   webView = WebView(this)
                   setContentView(webView)
 
-                  // Enable high-performance modern webview capabilities
                   webView.settings.apply {
                       javaScriptEnabled = true
                       domStorageEnabled = true
@@ -202,7 +227,6 @@ jobs:
                       mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                   }
 
-                  // Handle asset interception, external phone/WhatsApp intents, and live fallback
                   webView.webViewClient = object : WebViewClientCompat() {
                       override fun shouldInterceptRequest(
                           view: WebView,
@@ -242,7 +266,6 @@ jobs:
                       }
                   }
 
-                  // Primary Mode: Load high-speed offline assets via secure virtual origin
                   webView.loadUrl("https://appassets.androidplatform.net/assets/index.html")
               }
 
@@ -256,29 +279,53 @@ jobs:
           }
           EOF
 
-          # 9. Local properties mapping the SDK path
+          # 10. Local properties mapping the SDK path
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-          # 10. Gradle properties with optimized memory allocation
+          # 11. Gradle properties
           cat << 'EOF' > gradle.properties
           org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
           android.useAndroidX=true
           android.enableJetifier=true
           EOF
 
-          # 11. Download and run Gradle 8.5
-          echo "Downloading Gradle 8.5 binary..."
+          # 12. Download and run Gradle 8.5
+          echo "Downloading Gradle 8.5..."
           wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
           unzip -q gradle-8.5-bin.zip
 
           export JAVA_HOME=$JAVA_HOME
-          echo "Compiling Release-Ready Debug APK with Gradle 8.5..."
-          ./gradle-8.5/bin/gradle assembleDebug --no-daemon --stacktrace
+          echo "Building signed APK..."
+          ./gradle-8.5/bin/gradle assembleRelease --no-daemon --stacktrace
 
-      - name: Upload AUTO PULSE APK
+          # 13. Align and re-sign with apksigner (v1, v2, v3 schemes) to ensure 100% install success on all phones
+          echo "Locating built APK..."
+          RAW_APK=$(find app/build/outputs/apk/release/ -name "*.apk" | head -n 1)
+          if [ -z "$RAW_APK" ]; then
+              RAW_APK=$(find app/build/outputs/apk/ -name "*.apk" | head -n 1)
+          fi
+          echo "Found raw APK: $RAW_APK"
+
+          $ANDROID_HOME/build-tools/34.0.0/zipalign -v -p 4 "$RAW_APK" Pollachi-AutoPulse-aligned.apk
+
+          $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
+            --ks ../pollachi.keystore \
+            --ks-pass pass:pollachi123 \
+            --ks-key-alias pollachi \
+            --key-pass pass:pollachi123 \
+            --v1-signing-enabled true \
+            --v2-signing-enabled true \
+            --v3-signing-enabled true \
+            --out ../Pollachi-AutoPulse.apk \
+            Pollachi-AutoPulse-aligned.apk
+
+          echo "Verifying APK Signature Schemes..."
+          $ANDROID_HOME/build-tools/34.0.0/apksigner verify --verbose ../Pollachi-AutoPulse.apk
+
+      - name: Upload Pollachi AutoPulse APK
         uses: actions/upload-artifact@v4
         with:
-          name: AUTO-PULSE-APK
-          path: '**/app/build/outputs/apk/debug/*.apk'
+          name: Pollachi-AutoPulse-APK
+          path: Pollachi-AutoPulse.apk
           if-no-files-found: error
           retention-days: 14
