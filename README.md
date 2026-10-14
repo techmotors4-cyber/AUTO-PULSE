@@ -13,6 +13,7 @@
 - **Trip History**: Dedicated history tab showing previous rides, date, destination, driver details, fare summaries, and 1-tap rebooking.
 - **Official Branding**: Official Pollachi Auto & Pulse logo badge in header, rider view, and browser favicon.
 - **Dual-Mode Android APK**: Built with AndroidX `WebViewAssetLoader` over a secure virtual HTTPS origin (`https://appassets.androidplatform.net/assets/index.html`) with automatic live web fallback, eliminating mobile white screens.
+- **Production APK Signing**: Signed with APK Signature Schemes v1, v2, and v3 using a 2048-bit RSA key and 4-byte zip alignment for seamless installation on Android 7 to 15.
 
 ---
 
@@ -21,7 +22,7 @@
 1. In your local terminal, push the latest code to GitHub:
    ```bash
    git add .
-   git commit -m "fix: Dual-Mode Android APK with WebViewAssetLoader and live fallback"
+   git commit -m "fix: enforce v1/v2/v3 APK signing, zipalign, and com.pollachi.autopulse package id"
    git push origin main
    ```
 
@@ -29,9 +30,9 @@
    - Go to your repository on GitHub.
    - Click on the **Actions** tab at the top.
    - Click the latest **AUTO PULSE Android APK** workflow run.
-   - Under the **Artifacts** section at the bottom, click **AUTO-PULSE-APK** to download your Android APK.
+   - Under the **Artifacts** section at the bottom, click **Pollachi-AutoPulse-APK** to download `Pollachi-AutoPulse.apk`.
 
-3. Install on your Android phone — the app will open immediately with full offline capabilities and zero white screen.
+3. Install on your Android phone — it installs cleanly without "App not installed" errors and opens immediately.
 
 ---
 
