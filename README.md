@@ -1,15 +1,41 @@
-# AutoPulse: Local Auto & Mini Cab Dispatch
+# Pollachi AutoPulse (பொள்ளாச்சி ஆட்டோ & மினி கேப்)
 
-On-demand local auto-rickshaw and mini cab hailing platform with real-time GPS tracking and split-screen dispatch console.
+> On-demand local auto-rickshaw and mini cab dispatch application for **Pollachi City (பொள்ளாச்சி)** with real-time GPS tracking and dedicated 24/7 operator hotline for **Johskhan (90800 40503, Pollachi)**.
 
-## Features
+---
 
-- **Dedicated Fleet**: Auto Rickshaw (3W), E-Rickshaw Eco (Battery 3W), and Mini Cab AC (Compact 4W).
-- **Split-Screen Console**: Synchronized dual viewports for Commuters (Riders) and Drivers with digital 4-digit ride OTP verification and live auto taxi meter.
-- **Interactive Vector Map**: Real-time road coordinate navigation with animated vehicle heading rotation and live telemetry.
-- **Local Simulation**: Instant trip scenarios, adjustable simulation speed (1x, 2x, 4x), and Web Audio sound effects.
+## 🛺 Features
 
-## Local Development
+- **Pollachi Local Fleet**: Classic 3-wheeler Auto Rickshaw, Eco E-Rickshaw, and Mini Cab AC with TN-41 registrations.
+- **Pollachi Landmarks**: New Bus Stand, Gandhi Statue & Bazaar, Mahalingapuram Roundabout, Railway Junction, Coimbatore Rd (Achipatti), Palakkad Rd (NGM College), Udumalpet Rd, and Uzhavar Sandhai.
+- **Dedicated Dispatch**: One-tap phone dialing (`tel:9080040503`) and direct WhatsApp dispatch to **Johskhan (90800 40503)**.
+- **In-App Messaging**: Real-time two-way quick reply messaging between Rider and Driver with audio chime notification.
+- **Trip History**: Dedicated history tab showing previous rides, date, destination, driver details, fare summaries, and 1-tap rebooking.
+- **Official Branding**: Official Pollachi Auto & Pulse logo badge in header, rider view, and browser favicon.
+- **Dual-Mode Android APK**: Built with AndroidX `WebViewAssetLoader` over a secure virtual HTTPS origin (`https://appassets.androidplatform.net/assets/index.html`) with automatic live web fallback, eliminating mobile white screens.
+
+---
+
+## 📱 How to Build and Download the Android APK
+
+1. In your local terminal, push the latest code to GitHub:
+   ```bash
+   git add .
+   git commit -m "fix: Dual-Mode Android APK with WebViewAssetLoader and live fallback"
+   git push origin main
+   ```
+
+2. On GitHub:
+   - Go to your repository on GitHub.
+   - Click on the **Actions** tab at the top.
+   - Click the latest **AUTO PULSE Android APK** workflow run.
+   - Under the **Artifacts** section at the bottom, click **AUTO-PULSE-APK** to download your Android APK.
+
+3. Install on your Android phone — the app will open immediately with full offline capabilities and zero white screen.
+
+---
+
+## 💻 Local Web Development
 
 ```bash
 # 1. Install dependencies
@@ -21,3 +47,10 @@ npm run dev
 # 3. Build for production
 npm run build
 ```
+
+---
+
+## 📞 Pollachi Contact & Operator
+- **Operator**: Johskhan (ஜோஸ்கான்)
+- **Phone / WhatsApp**: [+91 90800 40503](tel:9080040503)
+- **Location**: Pollachi, Tamil Nadu, India (TN-41)
