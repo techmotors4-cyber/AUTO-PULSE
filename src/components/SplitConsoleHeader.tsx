@@ -41,7 +41,12 @@ export const SplitConsoleHeader: React.FC<SplitConsoleHeaderProps> = ({
       <div className="flex items-center justify-between gap-3 px-3 lg:px-6 py-2.5">
         {/* Zone 1: Pollachi AutoPulse Wordmark */}
         <div className="flex items-center gap-2.5 shrink-0">
-          <span className="text-xl">🛺</span>
+          <img
+            src="/src/assets/images/pollachi_logo_1791964756445.jpg"
+            alt="Pollachi Auto & Pulse Logo"
+            className="w-10 h-10 rounded-full object-cover shadow-sm border border-slate-200 shrink-0"
+            referrerPolicy="no-referrer"
+          />
           <div>
             <div className="flex items-center gap-1.5">
               <span className="text-base font-extrabold tracking-tight text-slate-900 whitespace-nowrap">

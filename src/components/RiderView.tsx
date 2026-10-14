@@ -121,9 +121,12 @@ export const RiderView: React.FC<RiderViewProps> = ({
       {/* Rider Header Bar */}
       <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/70">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 font-black flex items-center justify-center text-sm shadow-sm">
-            🛺
-          </div>
+          <img
+            src="/src/assets/images/pollachi_logo_1791964756445.jpg"
+            alt="Pollachi Auto & Pulse Logo"
+            className="w-9 h-9 rounded-full object-cover shadow-xs border border-slate-200 shrink-0"
+            referrerPolicy="no-referrer"
+          />
           <div>
             <h2 className="text-sm font-bold text-slate-900 tracking-tight leading-none">
               Pollachi AutoPulse
