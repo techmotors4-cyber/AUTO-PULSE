@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ActiveRide,
+  ChatMessage,
   DriverInfo,
   LocationPoint,
+  TripHistoryItem,
   VehicleType,
   FareBreakdown,
 } from './types/ride';
 import {
   CITY_LOCATIONS,
   DEFAULT_DRIVERS,
+  DEFAULT_TRIP_HISTORY,
   FLEET_OPTIONS,
   generateRoutePoints,
   calculateDistanceKm,
@@ -40,6 +43,12 @@ export default function App() {
 
   // Active Ride Central State
   const [activeRide, setActiveRide] = useState<ActiveRide | null>(null);
+
+  // In-App Chat Messages State
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  // Trip History State
+  const [tripHistory, setTripHistory] = useState<TripHistoryItem[]>(DEFAULT_TRIP_HISTORY);
 
   // Route points array currently being traversed
   const [currentRoutePoints, setCurrentRoutePoints] = useState<{ x: number; y: number }[]>([]);
@@ -96,6 +105,7 @@ export default function App() {
     );
     setCurrentRoutePoints(pathToPickup);
     currentStepIndexRef.current = 0;
+    setChatMessages([]); // Fresh chat thread for new ride
 
     const newRide: ActiveRide = {
       id: `POL-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -120,9 +130,29 @@ export default function App() {
       distanceRemainingKm: 0.8,
       currentStreet: 'Pollachi Bus Stand Circular Road',
       startedAt: Date.now(),
+      chatMessages: [],
     };
 
     setActiveRide(newRide);
+  };
+
+  // Send an in-app chat message (exchanged in real time between Rider & Driver)
+  const handleSendChatMessage = (sender: 'rider' | 'driver', text: string) => {
+    const senderName =
+      sender === 'rider'
+        ? activeRide?.rider.name || 'Passenger'
+        : activeRide?.driver.name || 'Driver';
+
+    const newMessage: ChatMessage = {
+      id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      sender,
+      senderName,
+      text,
+      timestamp: Date.now(),
+    };
+
+    setChatMessages((prev) => [...prev, newMessage]);
+    if (!isMuted) playSound.chatNotification();
   };
 
   // Driver Accepts Ride
@@ -136,9 +166,14 @@ export default function App() {
         ...prev,
         status: 'ACCEPTED',
         speedKmph: 28,
-        currentStreet: 'En route via Metro Corridor',
+        currentStreet: 'En route to pickup in Pollachi',
       };
     });
+
+    // Automated greeting from driver
+    setTimeout(() => {
+      handleSendChatMessage('driver', 'Hello! On my way to your pickup point.');
+    }, 1200);
   };
 
   // Driver Declines Ride
@@ -172,6 +207,9 @@ export default function App() {
         estimatedMinutesLeft: prev.fare.timeMinutes,
       };
     });
+
+    // Driver notification message
+    handleSendChatMessage('driver', 'I have arrived at your pickup spot.');
   };
 
   // Driver Verifies OTP and Starts Trip
@@ -188,17 +226,19 @@ export default function App() {
       return {
         ...prev,
         status: 'IN_TRANSIT',
-        speedKmph: 36,
-        currentStreet: 'MG Boulevard Sector 4',
+        speedKmph: 34,
+        currentStreet: 'Mahalingapuram Main Road',
       };
     });
     return true;
   };
 
-  // Complete Trip
+  // Complete Trip & Append to Trip History
   const handleCompleteTrip = () => {
     if (!isMuted) playSound.tripCompleted();
     if (!activeRide) return;
+
+    const completedRide = { ...activeRide };
 
     setActiveRide((prev) => {
       if (!prev) return null;
@@ -214,16 +254,39 @@ export default function App() {
       };
     });
 
+    // Add this completed trip to trip history
+    const historyItem: TripHistoryItem = {
+      id: completedRide.id,
+      date: 'Today',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      pickup: completedRide.pickup,
+      dropoff: completedRide.dropoff,
+      vehicleType: completedRide.vehicleType,
+      vehicleName:
+        FLEET_OPTIONS.find((f) => f.type === completedRide.vehicleType)?.title ||
+        'Pollachi Auto',
+      driverName: completedRide.driver.name,
+      driverPhone: completedRide.driver.phone,
+      vehiclePlate: completedRide.driver.vehiclePlate,
+      fareAmount: completedRide.fare.total,
+      paymentMethod: completedRide.paymentMethod,
+      distanceKm: completedRide.fare.distanceKm,
+      durationMinutes: completedRide.fare.timeMinutes,
+      rating: 5,
+    };
+
+    setTripHistory((prev) => [historyItem, ...prev]);
+
     // Update driver shift stats
     setDrivers((prev) =>
       prev.map((d) => {
         if (d.id === activeDriver.id) {
           return {
             ...d,
-            todayEarnings: d.todayEarnings + activeRide.fare.total,
+            todayEarnings: d.todayEarnings + completedRide.fare.total,
             todayTrips: d.todayTrips + 1,
-            currentX: activeRide.dropoff.x,
-            currentY: activeRide.dropoff.y,
+            currentX: completedRide.dropoff.x,
+            currentY: completedRide.dropoff.y,
           };
         }
         return d;
@@ -235,6 +298,7 @@ export default function App() {
   const handleSettlePayment = () => {
     if (!isMuted) playSound.click();
     setActiveRide(null);
+    setChatMessages([]);
     // Reset route display
     const newRoute = generateRoutePoints(pickup, dropoff);
     setCurrentRoutePoints(newRoute);
@@ -242,7 +306,14 @@ export default function App() {
 
   // Rider Rates Trip
   const handleRateTrip = (stars: number, feedback: string) => {
-    // Recorded feedback
+    // Feedback logged
+  };
+
+  // Rebook a past route from Trip History
+  const handleRebookTrip = (p: LocationPoint, d: LocationPoint, v: VehicleType) => {
+    setPickup(p);
+    setDropoff(d);
+    setVehicleType(v);
   };
 
   // Toggle Driver Online / Offline Duty
@@ -256,6 +327,7 @@ export default function App() {
   const handleLoadScenario = (scenario: 'busstand_mahalingam' | 'bazaar_station' | 'cbe_udumalpet') => {
     if (!isMuted) playSound.click();
     setActiveRide(null);
+    setChatMessages([]);
 
     if (scenario === 'busstand_mahalingam') {
       setPickup(CITY_LOCATIONS[0]); // New Bus Stand
@@ -276,6 +348,7 @@ export default function App() {
   const handleResetAll = () => {
     if (!isMuted) playSound.click();
     setActiveRide(null);
+    setChatMessages([]);
     setPickup(CITY_LOCATIONS[0]);
     setDropoff(CITY_LOCATIONS[2]);
     setVehicleType('auto');
@@ -383,6 +456,8 @@ export default function App() {
               selectedPickup={pickup}
               selectedDropoff={dropoff}
               selectedVehicleType={vehicleType}
+              tripHistory={tripHistory}
+              chatMessages={chatMessages}
               onSelectPickup={setPickup}
               onSelectDropoff={setDropoff}
               onSelectVehicleType={setVehicleType}
@@ -390,6 +465,8 @@ export default function App() {
               onCancelRide={() => setActiveRide(null)}
               onRateTrip={handleRateTrip}
               onResetToNewBooking={() => setActiveRide(null)}
+              onRebookTrip={handleRebookTrip}
+              onSendChatMessage={handleSendChatMessage}
             />
           </section>
         )}
@@ -428,6 +505,7 @@ export default function App() {
             <DriverView
               driver={activeDriver}
               activeRide={activeRide}
+              chatMessages={chatMessages}
               onToggleOnline={handleToggleDriverDuty}
               onAcceptRide={handleAcceptRide}
               onDeclineRide={handleDeclineRide}
@@ -435,6 +513,7 @@ export default function App() {
               onVerifyOtpAndStart={handleVerifyOtpAndStart}
               onCompleteTrip={handleCompleteTrip}
               onSettlePayment={handleSettlePayment}
+              onSendChatMessage={handleSendChatMessage}
             />
           </section>
         )}

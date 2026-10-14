@@ -9,13 +9,16 @@ import {
   AlertTriangle,
   ArrowRight,
   Flame,
+  MessageSquare,
 } from 'lucide-react';
-import { ActiveRide, DriverInfo } from '../types/ride';
+import { ActiveRide, ChatMessage, DriverInfo } from '../types/ride';
 import { playSound } from '../utils/audio';
+import { InAppChatModal } from './InAppChatModal';
 
 interface DriverViewProps {
   driver: DriverInfo;
   activeRide: ActiveRide | null;
+  chatMessages: ChatMessage[];
   onToggleOnline: () => void;
   onAcceptRide: () => void;
   onDeclineRide: () => void;
@@ -23,11 +26,13 @@ interface DriverViewProps {
   onVerifyOtpAndStart: (enteredOtp: string) => boolean;
   onCompleteTrip: () => void;
   onSettlePayment: () => void;
+  onSendChatMessage: (sender: 'rider' | 'driver', text: string) => void;
 }
 
 export const DriverView: React.FC<DriverViewProps> = ({
   driver,
   activeRide,
+  chatMessages,
   onToggleOnline,
   onAcceptRide,
   onDeclineRide,
@@ -35,14 +40,16 @@ export const DriverView: React.FC<DriverViewProps> = ({
   onVerifyOtpAndStart,
   onCompleteTrip,
   onSettlePayment,
+  onSendChatMessage,
 }) => {
   const [otpInput, setOtpInput] = useState('');
   const [otpError, setOtpError] = useState(false);
   const [countdown, setCountdown] = useState(15);
+  const [showChatModal, setShowChatModal] = useState(false);
 
   // Incoming ride alert countdown
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setInterval>;
     if (activeRide && activeRide.status === 'SEARCHING' && driver.isOnline) {
       setCountdown(15);
       playSound.dispatchPing();
@@ -76,7 +83,7 @@ export const DriverView: React.FC<DriverViewProps> = ({
   return (
     <div className="flex flex-col h-full bg-slate-900 text-slate-100">
       {/* Driver Top Header Bar */}
-      <div className="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/80">
+      <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-950/80">
         <div className="flex items-center gap-3">
           <div className="relative">
             <img
@@ -219,15 +226,15 @@ export const DriverView: React.FC<DriverViewProps> = ({
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
                   <div>
-                    <span className="font-semibold text-white block">Central Metro Hub</span>
-                    <span className="text-[11px] text-slate-400">0.4 km · High commuter queue</span>
+                    <span className="font-semibold text-white block">Pollachi Central Bus Stand</span>
+                    <span className="text-[11px] text-slate-400">0.3 km · Heavy town rush</span>
                   </div>
                   <span className="font-mono text-emerald-400 text-xs font-bold">+₹20 Surge</span>
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800">
                   <div>
-                    <span className="font-semibold text-white block">Grand Bazaar Market</span>
-                    <span className="text-[11px] text-slate-400">1.1 km · Evening shopping rush</span>
+                    <span className="font-semibold text-white block">Gandhi Statue & Bazaar</span>
+                    <span className="text-[11px] text-slate-400">0.8 km · Evening market shoppers</span>
                   </div>
                   <span className="font-mono text-emerald-400 text-xs font-bold">+₹15 Surge</span>
                 </div>
@@ -344,12 +351,30 @@ export const DriverView: React.FC<DriverViewProps> = ({
                   </div>
                 </div>
 
-                <a
-                  href={`tel:${activeRide.rider.phone}`}
-                  className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
-                >
-                  <Phone className="w-4 h-4" />
-                </a>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      playSound.click();
+                      setShowChatModal(true);
+                    }}
+                    className="p-2.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors flex items-center gap-1.5 relative"
+                    title="Chat with Passenger"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="text-xs font-semibold">Chat</span>
+                    {chatMessages.length > 0 && (
+                      <span className="w-2 h-2 rounded-full bg-blue-400 absolute -top-0.5 -right-0.5"></span>
+                    )}
+                  </button>
+                  <a
+                    href={`tel:${activeRide.rider.phone}`}
+                    className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
+                    title="Call Passenger"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -381,6 +406,22 @@ export const DriverView: React.FC<DriverViewProps> = ({
                 Ask passenger <strong className="text-white">{activeRide.rider.name}</strong> for the 4-digit code shown on their app.
               </p>
             </div>
+
+            {/* Quick in-app chat button at gate */}
+            <button
+              type="button"
+              onClick={() => {
+                playSound.click();
+                setShowChatModal(true);
+              }}
+              className="w-full py-2 px-3 rounded-lg border border-slate-800 bg-slate-900 hover:bg-slate-800 text-xs text-slate-300 font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
+              <span>Chat with Passenger (e.g. "Waiting at gate")</span>
+              {chatMessages.length > 0 && (
+                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+              )}
+            </button>
 
             <form onSubmit={handleVerifyOtp} className="space-y-3">
               <div className="flex justify-center">
@@ -479,17 +520,32 @@ export const DriverView: React.FC<DriverViewProps> = ({
               </div>
             </div>
 
-            {/* Turn instruction */}
-            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
-                <Navigation2 className="w-5 h-5" />
+            {/* Turn instruction & Chat */}
+            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                  <Navigation2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Next Instruction</span>
+                  <span className="text-xs font-semibold text-white">
+                    Continue on {activeRide.currentStreet} towards {activeRide.dropoff.name}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] text-slate-400 block">Next Instruction</span>
-                <span className="text-xs font-semibold text-white">
-                  Continue straight on {activeRide.currentStreet} towards {activeRide.dropoff.name}
-                </span>
-              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playSound.click();
+                  setShowChatModal(true);
+                }}
+                className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors flex items-center gap-1 shrink-0"
+                title="Chat with Passenger"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="text-[11px] font-semibold hidden sm:inline">Chat</span>
+              </button>
             </div>
 
             {/* End Trip Action */}
@@ -543,6 +599,20 @@ export const DriverView: React.FC<DriverViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* In-App Chat Modal for Driver */}
+      {activeRide && (
+        <InAppChatModal
+          isOpen={showChatModal}
+          onClose={() => setShowChatModal(false)}
+          currentUser="driver"
+          counterpartName={activeRide.rider.name}
+          counterpartSubtitle={`Passenger · Pickup: ${activeRide.pickup.name}`}
+          messages={chatMessages}
+          onSendMessage={(text) => onSendChatMessage('driver', text)}
+          theme="dark"
+        />
+      )}
     </div>
   );
 };

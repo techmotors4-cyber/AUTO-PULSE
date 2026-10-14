@@ -1,4 +1,4 @@
-import { LocationPoint, VehicleOption, DriverInfo } from '../types/ride';
+import { LocationPoint, VehicleOption, DriverInfo, TripHistoryItem } from '../types/ride';
 
 // Pollachi City Operator Info
 export const POLLACHI_OPERATOR = {
@@ -348,3 +348,58 @@ export function calculateHeading(
   const deg = (rad * 180) / Math.PI;
   return (deg + 90 + 360) % 360;
 }
+
+// Initial Seed for Trip History
+export const DEFAULT_TRIP_HISTORY: TripHistoryItem[] = [
+  {
+    id: 'POL-8291',
+    date: 'Yesterday',
+    time: '06:15 PM',
+    pickup: CITY_LOCATIONS[0], // New Bus Stand
+    dropoff: CITY_LOCATIONS[2], // Mahalingapuram Roundabout
+    vehicleType: 'auto',
+    vehicleName: 'Pollachi Auto Rickshaw',
+    driverName: 'Johskhan (ஜோஸ்கான்)',
+    driverPhone: '9080040503',
+    vehiclePlate: 'TN 41 AX 3624',
+    fareAmount: 68,
+    paymentMethod: 'upi',
+    distanceKm: 2.4,
+    durationMinutes: 7,
+    rating: 5,
+  },
+  {
+    id: 'POL-7840',
+    date: '12 Oct 2026',
+    time: '11:40 AM',
+    pickup: CITY_LOCATIONS[5], // Palakkad Rd - NGM College
+    dropoff: CITY_LOCATIONS[1], // Gandhi Statue & Bazaar
+    vehicleType: 'e_rickshaw',
+    vehicleName: 'E-Rickshaw Eco',
+    driverName: 'Murugan (முருகன்)',
+    driverPhone: '9080040503',
+    vehiclePlate: 'TN 41 ER 1092',
+    fareAmount: 48,
+    paymentMethod: 'cash',
+    distanceKm: 1.8,
+    durationMinutes: 6,
+    rating: 5,
+  },
+  {
+    id: 'POL-6512',
+    date: '10 Oct 2026',
+    time: '08:20 PM',
+    pickup: CITY_LOCATIONS[4], // Coimbatore Road - Achipatti
+    dropoff: CITY_LOCATIONS[3], // Railway Station
+    vehicleType: 'mini_cab',
+    vehicleName: 'Mini Cab AC',
+    driverName: 'Senthil Kumar (செந்தில்)',
+    driverPhone: '9080040503',
+    vehiclePlate: 'TN 41 Y 8820',
+    fareAmount: 185,
+    paymentMethod: 'wallet',
+    distanceKm: 5.6,
+    durationMinutes: 14,
+    rating: 5,
+  },
+];

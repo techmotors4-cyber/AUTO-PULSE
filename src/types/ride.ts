@@ -94,6 +94,33 @@ export interface ActiveRide {
   nextTurn?: TurnInstruction;
   startedAt?: number;
   completedAt?: number;
+  chatMessages?: ChatMessage[];
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: 'rider' | 'driver';
+  senderName: string;
+  text: string;
+  timestamp: number;
+}
+
+export interface TripHistoryItem {
+  id: string;
+  date: string;
+  time: string;
+  pickup: LocationPoint;
+  dropoff: LocationPoint;
+  vehicleType: VehicleType;
+  vehicleName: string;
+  driverName: string;
+  driverPhone: string;
+  vehiclePlate: string;
+  fareAmount: number;
+  paymentMethod: 'cash' | 'upi' | 'wallet';
+  distanceKm: number;
+  durationMinutes: number;
+  rating?: number;
 }
 
 export interface CompletedTripReceipt {
