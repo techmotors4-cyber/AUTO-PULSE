@@ -1,11 +1,12 @@
 steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          # Remove or comment out cache: 'gradle' if your project is in a subfolder
-          cache: 'gradle'
+  - name: Set up JDK
+    uses: actions/setup-java@v5
+    with:
+      distribution: 'temurin'
+      java-version: '17'
+      
+  - name: Build with Gradle
+    uses: gradle/actions/setup-gradle@v3
